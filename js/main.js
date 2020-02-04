@@ -151,23 +151,12 @@ var showImages = function (images) {
   picturesElement.appendChild(newFragment);
 };
 
-// Открыть изображение в модальном режиме
-var openModalImage = function (image) {
-  var bigPictureElement = document.querySelector('.big-picture');
-  bigPictureElement.classList.remove('hidden');
+// Получить элементы комментариев
+var getCommentsElement = function (comments) {
+  var elements = [];
 
-  bigPictureElement.querySelector('.big-picture__img').src = image.url;
-  bigPictureElement.querySelector('.likes-count').textContent = image.likes.length;
-  bigPictureElement.querySelector('.comments-count').textContent = image.comments.length;
-
-  var socialCommentsElement = document.querySelector('.social__comments');
-
-  // Создаем буферный фрагмент
-  var newCommentsFragment = document.createDocumentFragment();
-
-  // Заполняем блок с комментариями
-  for (var i = 0; i < image.comments.length; i++) {
-    var comment = image.comments[i];
+  for (var i = 0; i < comments.length; i++) {
+    var comment = comments[i];
 
     var liElement = document.createElement('li');
     liElement.classList.add('social__comment');
@@ -186,9 +175,31 @@ var openModalImage = function (image) {
     liElement.appendChild(imgElement);
     liElement.appendChild(pElement);
 
-    newCommentsFragment.appendChild(liElement);
+    elements.push(liElement);
   }
 
+  return elements;
+};
+
+// Открыть изображение в модальном режиме
+var openModalImage = function (image) {
+  var bigPictureElement = document.querySelector('.big-picture');
+  bigPictureElement.classList.remove('hidden');
+
+  bigPictureElement.querySelector('.big-picture__img').src = image.url;
+  bigPictureElement.querySelector('.likes-count').textContent = image.likes.length;
+  bigPictureElement.querySelector('.comments-count').textContent = image.comments.length;
+
+  var socialCommentsElement = document.querySelector('.social__comments');
+
+  // Создаем буферный фрагмент
+  var newCommentsFragment = document.createDocumentFragment();
+
+  var commentsElements = getCommentsElement(image.comments);
+  // Заполняем блок с комментариями
+  for (var i = 0; i < commentsElements.length; i++) {
+    newCommentsFragment.appendChild(commentsElements[i]);
+  }
   socialCommentsElement.appendChild(newCommentsFragment);
 
   // Добавляем описание к изображению
