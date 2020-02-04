@@ -6,6 +6,8 @@ var LIKE_MIN_COUNT = 15;
 var LIKE_MAX_COUNT = 200;
 var COMMENTS_MIN_COUNT = 2;
 var COMMENTS_MAX_COUNT = 10;
+var COMMENT_IMG_WIDTH = 35;
+var COMMENT_IMG_HEIGHT = 35;
 
 
 var MESSAGES = ['Всё отлично!',
@@ -113,9 +115,8 @@ var getImages = function (count) {
 };
 
 // Получить необходимое количество элементов изображений по заданному шаблону
-var getPicturesElements = function (count, templateElement) {
+var getPicturesElements = function (images, templateElement) {
   var imagesElements = [];
-  var images = getImages(count);
 
   for (var i = 0; i < images.length; i++) {
     var imageElement = templateElement.cloneNode(true);
@@ -129,27 +130,87 @@ var getPicturesElements = function (count, templateElement) {
 };
 
 // Отобразить все изображения
-var showImages = function () {
+var showImages = function (images) {
   // Шаблон изображения
   var imageTemplate = document.querySelector('#picture')
   .content
   .querySelector('.picture');
 
   // Создаем буферный фрагмент
-  var wizardsFragment = document.createDocumentFragment();
+  var newFragment = document.createDocumentFragment();
 
-  var imagesElements = getPicturesElements(IMAGES_COUNT, imageTemplate);
+  var imagesElements = getPicturesElements(images, imageTemplate);
 
   for (var i = 0; i < imagesElements.length; i++) {
     var imageElement = imagesElements[i];
-    wizardsFragment.appendChild(imageElement);
+    newFragment.appendChild(imageElement);
   }
 
   // Элемент списка изображений
   var picturesElement = document.querySelector('.pictures');
-  picturesElement.appendChild(wizardsFragment);
+  picturesElement.appendChild(newFragment);
 };
 
-showImages();
+// Открыть изображение в модальном режиме
+var openModalImage = function (image) {
+  var bigPictureElement = document.querySelector('.big-picture');
+  bigPictureElement.classList.remove('hidden');
 
+  bigPictureElement.querySelector('.big-picture__img').src = image.url;
+  bigPictureElement.querySelector('.likes-count').textContent = image.likes.length;
+  bigPictureElement.querySelector('.comments-count').textContent = image.comments.length;
 
+  var socialCommentsElement = document.querySelector('.social__comments');
+
+  // Создаем буферный фрагмент
+  var newCommentsFragment = document.createDocumentFragment();
+
+  // Заполняем блок с комментариями
+  for (var i = 0; i < image.comments.length; i++) {
+    var comment = image.comments[i];
+
+    var liElement = document.createElement('li');
+    liElement.classList.add('social__comment');
+
+    var imgElement = document.createElement('img');
+    imgElement.classList.add('social__picture');
+    imgElement.src = comment.avatar;
+    imgElement.alt = comment.name;
+    imgElement.width = COMMENT_IMG_WIDTH;
+    imgElement.height = COMMENT_IMG_HEIGHT;
+
+    var pElement = document.createElement('p');
+    pElement.classList.add('social__text');
+    pElement.textContent = comment.message;
+
+    liElement.appendChild(imgElement);
+    liElement.appendChild(pElement);
+
+    newCommentsFragment.appendChild(liElement);
+  }
+
+  socialCommentsElement.appendChild(newCommentsFragment);
+
+  // Добавляем описание к изображению
+  var captionElement = document.querySelector('.social__caption');
+  captionElement.textContent = image.description;
+
+  // Скрываем счетчик комментариев
+  var socialCommentCountElement = document.querySelector('.social__comment-count');
+  socialCommentCountElement.classList.add('hidden');
+
+  // Скрываем блок загрузки новых комментариев
+  var commentsLoaderElement = document.querySelector('.comments-loader');
+  commentsLoaderElement.classList.add('hidden');
+
+  // Убираем прокручивание тела
+  var bodyElement = document.body;
+  bodyElement.classList.add('modal-open');
+};
+
+var images = getImages(IMAGES_COUNT);
+showImages(images);
+
+// Открываем первое изображение
+var selectedImage = images[0];
+openModalImage(selectedImage);
