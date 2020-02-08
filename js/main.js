@@ -29,30 +29,34 @@ var AUTHORS = ['Вашингтон Ирвинг',
   'Таня'
 ];
 
-// Получить случайно целое число от 0 до max - 1
-var getRandomNumber = function (max) {
-  return Math.floor(Math.random() * Math.floor(max));
-};
+// Шаблон для изображения
+var imageTemplate = document.querySelector('#picture')
+  .content
+  .querySelector('.picture');
+// Элемент контейнера для изображений
+var picturesElement = document.querySelector('.pictures');
+// Элемент открытого изображения
+var bigPictureElement = document.querySelector('.big-picture');
+// Элемент блока комментариев открытого изображения
+var socialCommentsElement = document.querySelector('.social__comments');
+// Элемент счетчика комментариев открытого изображения
+var socialCommentCountElement = document.querySelector('.social__comment-count');
+// Блок загрузки новых комментариев открытого изображения
+var commentsLoaderElement = document.querySelector('.comments-loader');
+// Блок с описанием открытого изображения
+var captionElement = document.querySelector('.social__caption');
 
 // Получить случайно целое число от min до max
-var getRandomNumberWithMinMax = function (min, max) {
-  // Проверка от дураков :)
-  if (max < min) {
-    return undefined;
-  }
-
-  // Ищем локальный максимум для рандомного значения
-  var localMax = max - min + 1;
-  var randomVal = getRandomNumber(localMax);
-  // Корректируем полученное значение для попадания в необходимый диапазон
-  var result = randomVal + min;
-  return result;
+var getRandomInteger = function randomInteger(min, max) {
+  // случайное число от min до (max+1)
+  var rand = min + Math.random() * (max + 1 - min);
+  return Math.floor(rand);
 };
 
-// Получить случайный элемент массива из массива
+// Получить случайный элемент массива
 var getRandomArrayValue = function (array) {
   var arrayLength = array.length;
-  var randomIndex = getRandomNumber(arrayLength);
+  var randomIndex = getRandomInteger(0, arrayLength - 1);
   var result = array[randomIndex];
   return result;
 };
@@ -67,51 +71,70 @@ var getRandomMessage = function (stringsCount) {
   return message;
 };
 
-// Получить заданное количество комментариев
-var getComments = function (count) {
+// Получить случайный комментарий
+var getRandomComment = function () {
+  var author = getRandomArrayValue(AUTHORS);
+  var avatarIndex = getRandomInteger(1, AVATARS_COUNT);
+  var commentStringsCount = getRandomInteger(1, 2);
+  var message = getRandomMessage(commentStringsCount);
+
+  var newComment = {
+    avatar: 'img/avatar-' + avatarIndex + '.svg',
+    message: message,
+    name: author
+  };
+
+  return newComment;
+};
+
+// Получить заданное количество случайных комментариев
+var getRandomComments = function (count) {
   var comments = [];
-
   for (var i = 0; i < count; i++) {
-    var author = getRandomArrayValue(AUTHORS);
-    var avatarIndex = getRandomNumber(AVATARS_COUNT) + 1;
-    var commentStringsCount = getRandomNumber(2) + 1;
-    var message = getRandomMessage(commentStringsCount);
-
-    var newComment = {
-      avatar: 'img/avatar-' + avatarIndex + '.svg',
-      message: message,
-      name: author
-    };
-
+    var newComment = getRandomComment();
     comments.push(newComment);
   }
 
   return comments;
 };
 
+// Сгенерировать параметры для изображения с заданным индексом
+var getRandomImage = function (index) {
+  // Получаем количество комментариев
+  var commentsCount = getRandomInteger(COMMENTS_MIN_COUNT, COMMENTS_MAX_COUNT);
+  // Получаем массив комментариев
+  var comments = getRandomComments(commentsCount);
+  var likesCount = getRandomInteger(LIKE_MIN_COUNT, LIKE_MAX_COUNT);
+
+  var image = {
+    url: 'photos/' + index + '.jpg',
+    description: 'описание фотографии',
+    likes: likesCount,
+    comments: comments
+  };
+
+  return image;
+};
+
 // Получить необходимое количество изображений
 var getImages = function (count) {
   var images = [];
 
-  for (var i = 0; i < count; i++) {
-    // Получаем количество комментариев
-    var commentsCount = getRandomNumberWithMinMax(COMMENTS_MIN_COUNT, COMMENTS_MAX_COUNT);
-    // Получаем массив комментариев
-    var comments = getComments(commentsCount);
-    var likesCount = getRandomNumberWithMinMax(LIKE_MIN_COUNT, LIKE_MAX_COUNT);
-    var photoIndex = i + 1;
-
-    var image = {
-      url: 'photos/' + photoIndex + '.jpg',
-      description: 'описание фотографии',
-      likes: likesCount,
-      comments: comments
-    };
-
+  for (var i = 1; i <= count; i++) {
+    var image = getRandomImage(i);
     images.push(image);
   }
 
   return images;
+};
+
+// Получить элемент изображения по заданному шаблону
+var getPictureElement = function (image, templateElement) {
+  var imageElement = templateElement.cloneNode(true);
+  imageElement.querySelector('.picture__img').src = image.url;
+  imageElement.querySelector('.picture__likes').textContent = image.likes;
+  imageElement.querySelector('.picture__comments').textContent = image.comments.length;
+  return imageElement;
 };
 
 // Получить необходимое количество элементов изображений по заданному шаблону
@@ -119,10 +142,7 @@ var getPicturesElements = function (images, templateElement) {
   var imagesElements = [];
 
   for (var i = 0; i < images.length; i++) {
-    var imageElement = templateElement.cloneNode(true);
-    imageElement.querySelector('.picture__img').src = images[i].url;
-    imageElement.querySelector('.picture__likes').textContent = images[i].likes;
-    imageElement.querySelector('.picture__comments').textContent = images[i].comments.length;
+    var imageElement = getPictureElement(images[i], templateElement);
     imagesElements.push(imageElement);
   }
 
@@ -131,14 +151,8 @@ var getPicturesElements = function (images, templateElement) {
 
 // Отобразить все изображения
 var showImages = function (images) {
-  // Шаблон изображения
-  var imageTemplate = document.querySelector('#picture')
-  .content
-  .querySelector('.picture');
-
   // Создаем буферный фрагмент
   var newFragment = document.createDocumentFragment();
-
   var imagesElements = getPicturesElements(images, imageTemplate);
 
   for (var i = 0; i < imagesElements.length; i++) {
@@ -146,9 +160,29 @@ var showImages = function (images) {
     newFragment.appendChild(imageElement);
   }
 
-  // Элемент списка изображений
-  var picturesElement = document.querySelector('.pictures');
   picturesElement.appendChild(newFragment);
+};
+
+// Получить элемент комментария
+var getCommentElement = function (comment) {
+  var liElement = document.createElement('li');
+  liElement.classList.add('social__comment');
+
+  var imgElement = document.createElement('img');
+  imgElement.classList.add('social__picture');
+  imgElement.src = comment.avatar;
+  imgElement.alt = comment.name;
+  imgElement.width = COMMENT_IMG_WIDTH;
+  imgElement.height = COMMENT_IMG_HEIGHT;
+
+  var pElement = document.createElement('p');
+  pElement.classList.add('social__text');
+  pElement.textContent = comment.message;
+
+  liElement.appendChild(imgElement);
+  liElement.appendChild(pElement);
+
+  return liElement;
 };
 
 // Получить элементы комментариев
@@ -157,66 +191,53 @@ var getCommentsElement = function (comments) {
 
   for (var i = 0; i < comments.length; i++) {
     var comment = comments[i];
-
-    var liElement = document.createElement('li');
-    liElement.classList.add('social__comment');
-
-    var imgElement = document.createElement('img');
-    imgElement.classList.add('social__picture');
-    imgElement.src = comment.avatar;
-    imgElement.alt = comment.name;
-    imgElement.width = COMMENT_IMG_WIDTH;
-    imgElement.height = COMMENT_IMG_HEIGHT;
-
-    var pElement = document.createElement('p');
-    pElement.classList.add('social__text');
-    pElement.textContent = comment.message;
-
-    liElement.appendChild(imgElement);
-    liElement.appendChild(pElement);
-
-    elements.push(liElement);
+    var commentElement = getCommentElement(comment);
+    elements.push(commentElement);
   }
 
   return elements;
 };
 
-// Открыть изображение в модальном режиме
-var openModalImage = function (image) {
-  var bigPictureElement = document.querySelector('.big-picture');
+var showMainPicture = function (image) {
+  // Удаляем скрытость элемента открытого изображения
   bigPictureElement.classList.remove('hidden');
 
   bigPictureElement.querySelector('.big-picture__img').src = image.url;
   bigPictureElement.querySelector('.likes-count').textContent = image.likes.length;
   bigPictureElement.querySelector('.comments-count').textContent = image.comments.length;
 
-  var socialCommentsElement = document.querySelector('.social__comments');
-
-  // Создаем буферный фрагмент
-  var newCommentsFragment = document.createDocumentFragment();
-
-  var commentsElements = getCommentsElement(image.comments);
-  // Заполняем блок с комментариями
-  for (var i = 0; i < commentsElements.length; i++) {
-    newCommentsFragment.appendChild(commentsElements[i]);
-  }
-  socialCommentsElement.appendChild(newCommentsFragment);
-
-  // Добавляем описание к изображению
-  var captionElement = document.querySelector('.social__caption');
-  captionElement.textContent = image.description;
-
   // Скрываем счетчик комментариев
-  var socialCommentCountElement = document.querySelector('.social__comment-count');
   socialCommentCountElement.classList.add('hidden');
-
   // Скрываем блок загрузки новых комментариев
-  var commentsLoaderElement = document.querySelector('.comments-loader');
   commentsLoaderElement.classList.add('hidden');
 
   // Убираем прокручивание тела
   var bodyElement = document.body;
   bodyElement.classList.add('modal-open');
+
+  // Добавляем описание к изображению
+  captionElement.textContent = image.description;
+};
+
+// Добавить элементы комментариев
+var addCommentsToElement = function (comments, parentElement) {
+  // Создаем буферный фрагмент
+  var newCommentsFragment = document.createDocumentFragment();
+
+  var commentsElements = getCommentsElement(comments);
+  // Заполняем блок с комментариями
+  for (var i = 0; i < commentsElements.length; i++) {
+    newCommentsFragment.appendChild(commentsElements[i]);
+  }
+  parentElement.appendChild(newCommentsFragment);
+};
+
+// Открыть изображение в модальном режиме
+var openModalImage = function (image) {
+  // Показать основное изображение
+  showMainPicture(image);
+  // Показать комментарии
+  addCommentsToElement(image.comments, socialCommentsElement);
 };
 
 var images = getImages(IMAGES_COUNT);
