@@ -60,7 +60,10 @@ var imgUploadOverlayElement = document.querySelector('.img-upload__overlay');
 var uploadCancelButton = document.querySelector('#upload-cancel');
 var uploadPanelKeydownHandler = function (evt) {
   if (evt.key === ESC_KEY) {
-    hideUploadPanel();
+    // Если мы не в окне редактирования тегов и комментария
+    if (!evt.target.classList.contains('text__hashtags') && !evt.target.classList.contains('text__description')) {
+      hideUploadPanel();
+    }
   }
 };
 // Кнопка увеличения изображения
@@ -129,23 +132,6 @@ var hashtagsInputChangeHandler = function () {
     }
   }
 };
-
-var hashtagsInputKeydownHandler = function (evt) {
-  if (evt.key === ESC_KEY) {
-    // Останавливаем всплытие события
-    evt.stopPropagation();
-  }
-};
-
-// Элемент для ввода комментария к загружаемой фотографии
-var textDescriptionInput = document.querySelector('.text__description');
-var textDescriptionInputKeyDownHandler = function (evt) {
-  if (evt.key === ESC_KEY) {
-    // Останавливаем всплытие события
-    evt.stopPropagation();
-  }
-};
-
 
 var arrayToUpper = function (array) {
   var resultArray = [];
@@ -510,11 +496,6 @@ var showUploadPanel = function () {
 
   // Добавляем обработчик на изменение хэштегов
   hashtagsInput.addEventListener('change', hashtagsInputChangeHandler);
-  // Добавляем обработчик на нажатие клавиши в поле хештегов
-  hashtagsInput.addEventListener('keydown', hashtagsInputKeydownHandler);
-
-  // Добавляем обработчик на нажатие клавиши в поле комментария к загружаемой фотографии
-  textDescriptionInput.addEventListener('keydown', textDescriptionInputKeyDownHandler);
 };
 
 // Скрыть панель загрузки
@@ -537,11 +518,6 @@ var hideUploadPanel = function () {
 
   // Удаляем обработчик изменения хэштегов
   hashtagsInput.removeEventListener('change', hashtagsInputChangeHandler);
-  // Удаляем обработчик на нажатие клавиши в поле хештегов
-  hashtagsInput.removeEventListener('keydown', hashtagsInputKeydownHandler);
-
-  // Удаляем обработчик на нажатие клавиши в поле комментария к загружаемой фотографии
-  textDescriptionInput.removeEventListener('keydown', textDescriptionInputKeyDownHandler);
 };
 
 // Добавляем обработчик загрузки нового изобажения
